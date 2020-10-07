@@ -1,0 +1,117 @@
+[tool.poetry]
+name = "yandex_backend_task"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+authors = ["Anton Paramoshin <antonparamoshin@gmail.com>"]
+license = "No license file"
+repository = "https://github.com/paramoshin/yandex_backend_task"
+homepage = "https://github.com/paramoshin/yandex_backend_task"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+importlib_metadata = {version = "^1.7.0", python = "<3.8"}
+pydantic = "^1.6.1"
+fastapi = "^0.61.1"
+alembic = "^1.4.2"
+python-dotenv = "^0.14.0"
+psycopg2 = "^2.8.6"
+uvicorn = "^0.11.8"
+tzlocal = "^2.1"
+docker = "^4.3.1"
+faker = "^4.4.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.0.1"
+coverage = {extras = ["toml"], version = "^5.2.1"}
+pytest-cov = "^2.10.1"
+pytest-mock = "^3.3.0"
+black = "^19.10b0"
+flakehell = "^0.6.0"
+safety = "^1.9.0"
+mypy = "^0.782"
+flake8-bandit = "^2.1.2"
+flake8-bugbear = "^20.1.4"
+pep8-naming = "^0.11.1"
+pre-commit = "^2.7.1"
+flake8-annotations = "^2.3.0"
+flake8-docstrings = "^1.5.0"
+pdoc3 = "^0.8.4"
+darglint = "^1.5.3"
+isort = {extras = ["toml"], version = "^5.4.2"}
+pyupgrade = "^2.7.2"
+
+[tool.coverage.paths]
+source = ["ecommerce_analyzer", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["ecommerce_analyzer"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95
+omit = ["ecommerce_analyzer/db/alembic/env.py"]
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+known_third_party = ["_pytest", "ecommerce_analyzer", "pytest", "pytest_mock"]
+
+[mypy]
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 120
+target-version = ['py36', 'py37', 'py38']
+include = '\.pyi?$'
+exclude = '(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.venv|_build|buck-out|build|dist|examples)'
+
+[tool.flakehell]
+format = "grouped"
+show_source = true
+statistics = false
+doctests = true
+enable_extensions = "G"
+accept_encodings = "utf-8"
+max_complexity = 6
+max_line_length = 120
+docstring-convention = "google"
+strictness = "short"
+
+[tool.flakehell.plugins]
+pyflakes = ["+*", "-F401", "-F403"]
+# enable only codes from S100 to S199
+flake8-bandit = ["-*", "+S1??"]
+# enable everything that starts from `flake8-`
+"flake8-*" = ["+*"]
+flake8-bugbear = ["+*", "-E501", "-B008"]
+mccabe = ["+*"]
+"pep8-naming" = ["+*"]
+pycodestyle = ["+*", "-E203", "-E266", "-W503"]
+flake8-annotations = ["+*", "-ANN101", "-ANN102"]
+flake8-docstrings = ["+*"]
+
+[tool.flakehell.exceptions."tests/"]
+flake8-bandit = ["-S101"]
+flake8-annotations = ["-*"]
+flake8-darglint = ["-*"]
+flake8-docstrings = ["-*"]
+pycodestyle = ["-*"]
+mccabe = ["-C901"]
+
+[tool.flakehell.exceptions."noxfile.py"]
+flake8-annotations = ["-*"]
+flake8-darglint = ["-*"]
+flake8-docstrings = ["-*"]
+
+[tool.flakehell.exceptions."ecommerce_analyzer/db/alembic"]
+flake8-bandit = ["-S101"]
+flake8-annotations = ["-*"]
+flake8-darglint = ["-*"]
+flake8-docstrings = ["-*"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
