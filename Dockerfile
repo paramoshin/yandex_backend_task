@@ -21,6 +21,7 @@ WORKDIR ecommerce_analyzer/
 
 COPY --from=builder /ecommerce_analyzer /ecommerce_analyzer
 COPY /ecommerce_analyzer ./
+COPY /gunicorn.conf.py /gunicorn.conf.py
 
 ENV VIRTUAL_ENV=/ecommerce_analyzer/.venv
 ENV PATH="$PATH:$VIRTUAL_ENV/bin"
@@ -32,4 +33,6 @@ RUN if [ "$DEV_MODE" = "true" ]; \
    alembic upgrade head; \
   fi
 
-CMD ["uvicorn", "api.application:app", "--host", "0.0.0.0", "--port", "80"]
+EXPOSE 80
+
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-c", "/gunicorn.conf.py", "api.application:app"]

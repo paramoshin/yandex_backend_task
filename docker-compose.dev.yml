@@ -30,7 +30,7 @@ services:
     env_file:
       - ecommerce_analyzer/env/dev.env
     ports:
-      - 80:80
+      - 8000:80
 
 volumes:
   ecommerce-analyzer-db:

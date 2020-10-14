@@ -41,3 +41,5 @@ make docs
 ---
 # TODO:
 - ansible deploy
+- postgres course
+- ???
