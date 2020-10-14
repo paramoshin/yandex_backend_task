@@ -1,41 +1,38 @@
 """API service."""
-from typing import List, Union
+from __future__ import annotations
 
-from ecommerce_analyzer.analyzer import Analyzer
+from typing import Union
+
+import analyzer
+from databases import Database
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, PositiveInt, ValidationError
+from pydantic import ValidationError
 
-from .scheme import Citizen, CitizenPatch, Import, PresentsByMonth, TownPercentiles
-from .settings import analyzer
+from .dependencies import database
+from .scheme import Citizen, CitizenPatch, Import, Percentiles, Presents, SavedImport
 
 app = FastAPI(title="Ecommerce Analyzer", version="1.0", description="Provides analytical information about citizens")
 
 
-class ImportId(BaseModel):
-    """Import id."""
-
-    import_id: PositiveInt
-
-
-class SavedImport(BaseModel):
-    """Saved import."""
-
-    data: ImportId
+def get_db() -> Database:
+    """Get database."""
+    return database
 
 
-class Presents(BaseModel):
-    """Presents by month."""
+@app.on_event("startup")
+async def connect_to_database() -> None:
+    """Start connection pool on application startup."""
+    print(f"Creating connection pool to {database.url}")
+    await database.connect()
 
-    data: PresentsByMonth
 
-
-class Percentiles(BaseModel):
-    """Age percentiles."""
-
-    data: List[TownPercentiles]
+@app.on_event("shutdown")
+async def disconnect_from_database() -> None:
+    """Close connection pool on application shutdown."""
+    await database.disconnect()
 
 
 @app.exception_handler(RequestValidationError)
@@ -47,20 +44,20 @@ def validation_exception_handler(request: Request, exc: RequestValidationError) 
 
 
 @app.post("/imports", response_model=SavedImport, status_code=status.HTTP_201_CREATED)
-def save_import(request: Import, analyzer: Analyzer = Depends(analyzer)) -> SavedImport:
+async def save_import(request: Import, database: Database = Depends(get_db)) -> Union[dict, SavedImport, JSONResponse]:
     """Save import to database."""
-    import_id = analyzer.save_import(request)
+    import_id = await analyzer.save_import(request, database)
     response = {"data": {"import_id": import_id}}
-    return SavedImport.parse_obj(response)
+    return response
 
 
 @app.patch("/imports/{import_id}/citizens/{citizen_id}", response_model=Citizen, status_code=200)
-def patch_citizen(
-    import_id: int, citizen_id: int, request: CitizenPatch, analyzer: Analyzer = Depends(analyzer)
-) -> Union[Citizen, JSONResponse]:
+async def patch_citizen(
+    import_id: int, citizen_id: int, request: CitizenPatch, database: Database = Depends(get_db)
+) -> Union[dict, JSONResponse]:
     """Patch citizen."""
     try:
-        patched_citizen = analyzer.patch_citizen(import_id, citizen_id, citizen_patch=request)
+        patched_citizen = await analyzer.patch_citizen(import_id, citizen_id, citizen_patch=request, database=database)
     except ValidationError as e:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST, content=jsonable_encoder({"detail": e.errors(), "body": e.json()})
@@ -69,24 +66,24 @@ def patch_citizen(
 
 
 @app.get("/imports/{import_id}/citizens", response_model=Import, status_code=200)
-def get_citizens(import_id: int, analyzer: Analyzer = Depends(analyzer)) -> Import:
+async def get_citizens(import_id: int, database: Database = Depends(get_db)) -> Union[dict, Import]:
     """Get citizen."""
-    citizens = analyzer.get_citizens(import_id)
+    citizens = await analyzer.get_citizens(import_id, database)
     response = {"data": citizens}
-    return Import.parse_obj(response)
+    return response
 
 
 @app.get("/imports/{import_id}/citizens/birthdays", response_model=Presents, status_code=200)
-def get_number_of_birthdays(import_id: int, analyzer: Analyzer = Depends(analyzer)) -> Presents:
+async def get_number_of_birthdays(import_id: int, database: Database = Depends(get_db)) -> Union[dict, Presents]:
     """Get number of birthdays by months."""
-    presents_by_month = analyzer.get_birthdays(import_id)
+    presents_by_month = await analyzer.get_birthdays(import_id, database)
     response = {"data": presents_by_month}
-    return Presents.parse_obj(response)
+    return response
 
 
 @app.get("/imports/{import_id}/towns/stat/percentile/age", response_model=Percentiles, status_code=200)
-def get_age_statistics(import_id: int, analyzer: Analyzer = Depends(analyzer)) -> Percentiles:
+async def get_age_statistics(import_id: int, database: Database = Depends(get_db)) -> Union[dict, Percentiles]:
     """Get age percentiles by each town."""
-    age_stats = analyzer.get_age_statistics(import_id)
+    age_stats = await analyzer.get_age_statistics(import_id, database)
     response = {"data": age_stats}
-    return Percentiles.parse_obj(response)
+    return response

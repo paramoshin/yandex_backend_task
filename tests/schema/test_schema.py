@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 import pytest
-from ecommerce_analyzer.api.scheme import BaseCitizen, Citizen, CitizenPatch, Import
+from api.scheme import BaseCitizen, Citizen, CitizenPatch, Import
 from pydantic import ValidationError
 from utils import generate_citizen
 

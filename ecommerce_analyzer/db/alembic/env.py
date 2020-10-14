@@ -1,8 +1,8 @@
 from logging.config import fileConfig
 
 from alembic import context
-from ecommerce_analyzer.db import Base
-from ecommerce_analyzer.db.settings import DataBaseSettings
+from db import metadata
+from db.settings import DataBaseSettings
 from sqlalchemy import engine_from_config, pool
 
 db_settings = DataBaseSettings()
@@ -20,7 +20,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

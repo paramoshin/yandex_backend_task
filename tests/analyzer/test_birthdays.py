@@ -1,7 +1,8 @@
 from typing import Any, Dict, Mapping
 
+import analyzer
 import pytest
-from ecommerce_analyzer.api.scheme import Import
+from api.scheme import Import
 from utils import generate_citizen
 
 
@@ -48,21 +49,22 @@ datasets = [
 ]
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("dataset", datasets)
-def test_get_birthdays(analyzer, migrated_postgres, dataset):
+async def test_get_birthdays(database, migrated_postgres, dataset):
     # Перед прогоном каждого теста добавляем в БД дополнительную выгрузку с
     # двумя родственниками, чтобы убедиться, что обработчик различает жителей
     # разных выгрузок.
     import_obj = Import(
         data=[generate_citizen(citizen_id=1, relatives=[2]), generate_citizen(citizen_id=2, relatives=[1])]
     )
-    analyzer.save_import(import_obj)
-
-    # Проверяем обработчик на указанных данных
-    import_id = analyzer.save_import(Import(data=dataset["citizens"]))
-    result = analyzer.get_birthdays(import_id)
+    async with database:
+        await analyzer.save_import(import_obj, database)
+        # Проверяем обработчик на указанных данных
+        import_id = await analyzer.save_import(Import(data=dataset["citizens"]), database)
+        result = await analyzer.get_birthdays(import_id, database)
 
     for month in dataset["expected"]:
-        actual = {(citizen.citizen_id, citizen.presents) for citizen in getattr(result, month)}
+        actual = {(citizen["citizen_id"], citizen["presents"]) for citizen in result[month]}
         expected = {(citizen["citizen_id"], citizen["presents"]) for citizen in dataset["expected"][month]}
         assert actual == expected

@@ -1,8 +1,9 @@
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import analyzer
 import pytest
-from ecommerce_analyzer.api.scheme import Citizen, Import
+from api.scheme import Citizen, Import
 from utils import LONGEST_STR, MAX_INT, compare_citizen_groups, generate_citizen, generate_citizens
 
 Case = Tuple[Optional[callable], List[Union[dict, Citizen]]]
@@ -76,23 +77,25 @@ def get_citizens_from_case(case: Case) -> List[Dict[str, Any]]:
     return citizens
 
 
-def _test_import(analyzer, case):
+async def _test_import(database, case):
     citizens = get_citizens_from_case(case)
-    print(citizens)
     import_obj = Import(data=citizens)
-    print(import_obj)
-    import_id = analyzer.save_import(import_obj=import_obj)
-    imported_citizens = analyzer.get_citizens(import_id=import_id)
-    imported_citizens = [citizen.dict() for citizen in imported_citizens]
+    async with database:
+        import_id = await analyzer.save_import(import_obj=import_obj, database=database)
+        imported_citizens = await analyzer.get_citizens(import_id=import_id, database=database)
+    for citizen in imported_citizens:
+        del citizen["import_id"]
     assert compare_citizen_groups(citizens, imported_citizens)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("case", CORRECT_CASES)
-def test_correct_imports(migrated_postgres, analyzer, case):
-    _test_import(analyzer, case)
+async def test_correct_imports(migrated_postgres, database, case):
+    await _test_import(database, case)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("case", WRONG_CASES)
-def test_wrong_imports(migrated_postgres, analyzer, case):
+async def test_wrong_imports(migrated_postgres, database, case):
     with pytest.raises(ValueError):
-        _test_import(analyzer, case)
+        await _test_import(database, case)

@@ -3,11 +3,30 @@ Pydantic models used in application.
 
 Contains some business logic in form of validators.
 """
-__all__ = ["Citizen", "CitizenPatch", "CitizenPresents", "Import", "PresentsByMonth", "TownPercentiles"]
+__all__ = [
+    "Citizen",
+    "CitizenPatch",
+    "CitizenPresents",
+    "Import",
+    "PresentsByMonth",
+    "TownPercentiles",
+    "ImportId",
+    "SavedImport",
+    "Percentiles",
+    "Presents",
+]
 from datetime import date
-from typing import Any, List, Literal, Optional
+from enum import Enum
+from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field, PositiveFloat, PositiveInt, constr, create_model, root_validator, validator
+from pydantic import BaseModel, Field, PositiveInt, confloat, constr, create_model, root_validator, validator
+
+
+class Gender(str, Enum):
+    """Gender enum."""
+
+    male = "male"
+    female = "female"
 
 
 class BaseCitizen(BaseModel):
@@ -38,8 +57,14 @@ class Citizen(BaseCitizen):
     apartment: PositiveInt = Field(...)
     name: constr(min_length=1, max_length=256) = Field(...)
     birth_date: date = Field(...)
-    gender: Literal["male", "female"] = Field(...)
-    relatives: List[int] = Field(...)
+    gender: Gender = Field(...)
+    relatives: Optional[List[int]] = None
+
+    class Config:
+        """Model config."""
+
+        orm_mode = True
+        use_enum_values = True
 
 
 class CitizenPatch(BaseCitizen):
@@ -51,8 +76,14 @@ class CitizenPatch(BaseCitizen):
     apartment: Optional[PositiveInt]
     name: Optional[constr(min_length=1, max_length=256)]
     birth_date: Optional[date]
-    gender: Optional[Literal["male", "female"]]
-    relatives: Optional[List[int]]
+    gender: Optional[Gender]
+    relatives: Optional[List[int]] = None
+
+    class Config:
+        """Model config."""
+
+        orm_mode = True
+        use_enum_values = True
 
     @root_validator(pre=True)
     def assert_any(cls, values: Any) -> Any:
@@ -66,6 +97,12 @@ class Import(BaseModel):
     """Import model."""
 
     data: List[Citizen]
+
+    class Config:
+        """Model config."""
+
+        orm_mode = True
+        use_enum_values = True
 
     @validator("data")
     def citizens_ids_unique(cls, v: List[Citizen]) -> List[Citizen]:
@@ -105,6 +142,30 @@ class TownPercentiles(BaseModel):
     """Age percentiles for town."""
 
     town: str = Field(...)
-    p50: PositiveFloat = Field(...)
-    p75: PositiveFloat = Field(...)
-    p99: PositiveFloat = Field(...)
+    p50: confloat(ge=0) = Field(...)
+    p75: confloat(ge=0) = Field(...)
+    p99: confloat(ge=0) = Field(...)
+
+
+class ImportId(BaseModel):
+    """Import id."""
+
+    import_id: PositiveInt
+
+
+class SavedImport(BaseModel):
+    """Saved import."""
+
+    data: ImportId
+
+
+class Presents(BaseModel):
+    """Presents by month."""
+
+    data: PresentsByMonth
+
+
+class Percentiles(BaseModel):
+    """Age percentiles."""
+
+    data: List[TownPercentiles]

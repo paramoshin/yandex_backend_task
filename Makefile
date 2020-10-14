@@ -21,15 +21,7 @@ safety:
 
 .PHONY: pytest
 pytest:
-	PYTHONPATH=. nox -rs tests
-
-.PHONY: xdoctest
-xdoctest:
-	nox -rs xdoctest
-
-.PHONY: tests
-tests:
-	PYTHONPATH=. pytest xdoctest
+	PYTHONPATH=ecommerce_analyzer/ nox -rs tests
 
 .PHONY: lint
 lint:
@@ -39,6 +31,16 @@ lint:
 docs:
 	nox -rs docs-$(PYTHON_VERSION)
 
-.PHONY: build
-build:
-	poetry build
+.PHONY: loadtest
+loadtest:
+	PYTHONPATH=ecommerce_analyzer/ locust -f locustfile.py
+
+.PHONY: docker-dev
+docker-dev:
+	docker network create analyzer-dev-network || true
+	docker-compose --env-file ecommerce_analyzer/env/dev.env -f docker-compose.dev.yml up -d db
+	docker-compose --env-file ecommerce_analyzer/env/dev.env -f docker-compose.dev.yml up -d analyzer
+
+.PHONY: docker
+docker:
+	docker-compose --env-file ecommerce_analyzer/env/.env -f docker-compose.yml up -d

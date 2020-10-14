@@ -1,11 +1,12 @@
 import pytest
 from alembic import command
-from ecommerce_analyzer.analyzer import Analyzer
+from databases import Database
 
 
 @pytest.fixture(scope="module")
-def analyzer(db_settings):
-    return Analyzer(dsn=db_settings.dsn())
+def database(db_settings):
+    database = Database(db_settings.dsn())
+    return database
 
 
 @pytest.fixture(scope="module")

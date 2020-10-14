@@ -144,7 +144,7 @@ def compare_citizen_groups(left: Iterable, right: Iterable) -> bool:
 
 
 def wait_for_pg_container(
-    user: str, password: str, host: str, port: str, db: str, attempts: int = 100, timeout: float = 0.01
+    user: str, password: str, host: str, port: str, db: str, attempts: int = 10, timeout: float = 0.1
 ):
     for _ in range(attempts):
         try:

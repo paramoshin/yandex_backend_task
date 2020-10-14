@@ -69,7 +69,4 @@ make build
 
 ---
 # TODO:
-- write tests (postgres for testing in docker (tmpfs + fsync=off)) - done
-- write docstrings
-- refactor (decouple database queries and business logic (?))
-- load testing
+- ansible deploy

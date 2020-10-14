@@ -1,3 +1,3 @@
 """Module that contains database models, settings and alembic migrations."""
-__all__ = ["Base", "Citizen", "Import", "Relation"]
-from .models import Base, Citizen, Import, Relation
+__all__ = ["metadata", "citizens", "imports", "relations"]
+from .tables import citizens, imports, metadata, relations

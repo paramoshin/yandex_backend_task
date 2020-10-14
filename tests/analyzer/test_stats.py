@@ -1,7 +1,8 @@
 from datetime import date, timedelta
 
+import analyzer
 import pytest
-from ecommerce_analyzer.api.scheme import Import
+from api.scheme import Import
 from utils import generate_citizen
 
 
@@ -41,26 +42,27 @@ datasets = [
 ]
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("dataset", datasets)
-def test_get_ages(analyzer, migrated_postgres, dataset):
+async def test_get_ages(database, migrated_postgres, dataset):
     # Перед прогоном каждого теста добавим в БД дополнительную выгрузку с
     # жителем из другого города, чтобы убедиться, что обработчик различает
     # жителей разных выгрузок.
     import_obj = Import(data=[generate_citizen(citizen_id=1, town="Санкт-Петербург")])
-    _ = analyzer.save_import(import_obj)
-
-    import_id = analyzer.save_import(Import(data=dataset["citizens"]))
-    result = analyzer.get_age_statistics(import_id)
+    async with database:
+        await analyzer.save_import(import_obj, database)
+        import_id = await analyzer.save_import(Import(data=dataset["citizens"]), database)
+        result = await analyzer.get_age_statistics(import_id, database)
 
     assert len(dataset["expected"]) == len(result), "Towns number is different"
-    actual_towns_map = {town.town: town for town in result}
+    actual_towns_map = {town["town"]: town for town in result}
 
     for town in dataset["expected"]:
         assert town["town"] in actual_towns_map
         actual_town = actual_towns_map[town["town"]]
 
         for percentile in ["p50", "p75", "p99"]:
-            assert town[percentile] == getattr(actual_town, percentile), (
-                f"{town['town']} {percentile} {getattr(actual_town, percentile)} does "
+            assert town[percentile] == actual_town[percentile], (
+                f"{town['town']} {percentile} {actual_town[percentile]} does "
                 f"not match expected value {town[percentile]}"
             )

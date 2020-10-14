@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  db:
+    restart: always
+    image: postgres:12
+    volumes:
+      - ecommerce-analyzer-db:/var/lib/postgresql/data/pgdata
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    env_file:
+      - ecommerce_analyzer/env/.env
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+
+  analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DEV_MODE: "false"
+    depends_on:
+      - db
+    env_file:
+      - ecommerce_analyzer/env/.env
+    ports:
+      - 80:80
+
+volumes:
+  ecommerce-analyzer-db:

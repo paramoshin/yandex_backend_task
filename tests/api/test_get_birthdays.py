@@ -1,5 +1,6 @@
 from typing import Any, Mapping
 
+import pytest
 from utils import generate_citizen
 
 
@@ -11,7 +12,7 @@ def make_response(values: Mapping[str, Any] = None):
     return {str(month): values.get(str(month), []) if values else [] for month in range(1, 13)}
 
 
-def test_multiple_relaties(migrated_postgres, analyzer, client):
+def test_multiple_relaties(migrated_postgres, client):
     dataset = [
         generate_citizen(citizen_id=1, birth_date="2019-12-31", relatives=[2, 3]),
         generate_citizen(citizen_id=2, birth_date="2020-02-11", relatives=[1]),
@@ -32,7 +33,7 @@ def test_multiple_relaties(migrated_postgres, analyzer, client):
     assert response.json()["data"] == expected
 
 
-def test_self_relative(migrated_postgres, analyzer, client):
+def test_self_relative(migrated_postgres, client):
     dataset = [generate_citizen(citizen_id=1, name="Джейн", gender="male", birth_date="2020-02-17", relatives=[1])]
     r = client.post("/imports", json={"data": dataset})
     import_id = r.json()["data"]["import_id"]
@@ -44,7 +45,7 @@ def test_self_relative(migrated_postgres, analyzer, client):
     assert response.json()["data"] == expected
 
 
-def test_no_relatives(migrated_postgres, analyzer, client):
+def test_no_relatives(migrated_postgres, client):
     dataset = [
         generate_citizen(citizen_id=1, birth_date="2019-12-31", relatives=[]),
         generate_citizen(citizen_id=2, birth_date="2020-02-11", relatives=[]),
@@ -60,7 +61,7 @@ def test_no_relatives(migrated_postgres, analyzer, client):
     assert response.json()["data"] == expected
 
 
-def test_empty(migrated_postgres, analyzer, client):
+def test_empty(migrated_postgres, client):
     r = client.post("/imports", json={"data": []})
     import_id = r.json()["data"]["import_id"]
     url = f"/imports/{import_id}/citizens/birthdays"

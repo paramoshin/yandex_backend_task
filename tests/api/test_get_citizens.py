@@ -1,3 +1,4 @@
+import pytest
 from utils import LONGEST_STR, MAX_INT, compare_citizen_groups, generate_citizen, generate_citizens
 
 dataset = [
@@ -9,7 +10,7 @@ dataset = [
 ]
 
 
-def test_get_citizens(migrated_postgres, analyzer, client):
+def test_get_citizens(migrated_postgres, client):
     r = client.post("/imports", json={"data": dataset})
     import_id = r.json()["data"]["import_id"]
 

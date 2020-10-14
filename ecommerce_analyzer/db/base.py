@@ -1,6 +1,5 @@
 """Contains declarative base and naming conventions."""
 from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declarative_base
 
 convention = {
     "all_column_names": lambda constraint, table: "_".join([column.name for column in constraint.columns.values()]),
@@ -11,5 +10,3 @@ convention = {
     "pk": "pk__%(table_name)s",
 }
 metadata = MetaData(naming_convention=convention)
-
-Base = declarative_base(metadata=metadata)

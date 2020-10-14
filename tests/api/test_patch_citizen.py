@@ -1,10 +1,11 @@
 import json
 from datetime import date, timedelta
 
+import pytest
 from utils import LONGEST_STR, MAX_INT, compare_citizen_groups, generate_citizen, generate_citizens
 
 
-def test_successful_patch(migrated_postgres, analyzer, client):
+def test_successful_patch(migrated_postgres, client):
     dataset = [
         generate_citizen(
             citizen_id=1,
@@ -26,7 +27,7 @@ def test_successful_patch(migrated_postgres, analyzer, client):
 
     dataset[0]["name"] = "Сидорова Василиса Петровна"
     patch = {"name": dataset[0]["name"]}
-    response = client.patch(url=url, data=json.dumps(patch))
+    response = client.patch(url, data=json.dumps(patch))
     assert response.status_code == 200
     assert response.json() == dataset[0]
 
@@ -39,17 +40,17 @@ def test_successful_patch(migrated_postgres, analyzer, client):
     dataset[0]["relatives"] = [3]
     patch = dataset[0].copy()
     patch.pop("citizen_id")
-    response = client.patch(url=url, data=json.dumps(patch))
+    response = client.patch(url, data=json.dumps(patch))
     assert response.status_code == 200
     assert response.json() == dataset[0]
 
 
-def test_wrong_patch(migrated_postgres, analyzer, client):
+def test_wrong_patch(migrated_postgres, client):
     citizen = generate_citizen(citizen_id=1)
     r = client.post("/imports", json={"data": [citizen]})
     import_id = r.json()["data"]["import_id"]
     url = f"/imports/{import_id}/citizens/1"
     patch = {"birth_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")}
     citizen.update(patch)
-    response = client.patch(url=url, data=json.dumps(patch))
+    response = client.patch(url, data=json.dumps(patch))
     assert response.status_code == 400

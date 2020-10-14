@@ -1,11 +1,12 @@
 """Package-wide test fixtures."""
+import socket
 import uuid
 
 import docker
 import pytest
 from alembic.config import Config
-from ecommerce_analyzer.config import ROOT_DIR
-from ecommerce_analyzer.db.settings import ENV_DIR, DataBaseSettings
+from config import ROOT_DIR
+from db.settings import ENV_DIR, DataBaseSettings
 from tzlocal import get_localzone
 from utils import wait_for_pg_container
 
@@ -13,20 +14,30 @@ TIMEZONE = get_localzone().zone
 
 
 @pytest.fixture(scope="session")
-def db_settings():
-    return DataBaseSettings(_env_file=(ENV_DIR / "dev.env"))
+def unused_port():
+    """Find unused port."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+@pytest.fixture(scope="session")
+def db_settings(unused_port):
+    """Create dev database settings with unused port."""
+    return DataBaseSettings(host="localhost", port=unused_port, _env_file=(ENV_DIR / "dev.env"))
 
 
 @pytest.fixture(scope="session")
 def postgres(db_settings):
-    """
-    Создает временную БД для запуска теста.
-    """
+    """Создает временную БД для запуска теста."""
     client = docker.from_env()
-    print(client.info())
     container_id = uuid.uuid4()
     environment = dict(
-        POSTGRES_PASSWORD=db_settings.password, POSTGRES_USER=db_settings.user, POSTGRES_DB=db_settings.db, TZ=TIMEZONE
+        POSTGRES_PASSWORD=db_settings.password,
+        POSTGRES_USER=db_settings.user,
+        POSTGRES_DB=db_settings.db,
+        TZ=TIMEZONE,
+        PGTZ=TIMEZONE,
     )
     container = client.containers.run(
         "postgres:latest",
@@ -57,9 +68,7 @@ def postgres(db_settings):
 
 @pytest.fixture(scope="session")
 def alembic_config(db_settings, postgres):
-    """
-    Создает объект с конфигурацией для alembic, настроенный на временную БД.
-    """
+    """Создает объект с конфигурацией для alembic, настроенный на временную БД."""
     alembic_cfg = Config(ROOT_DIR / "alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", db_settings.dsn())
     alembic_cfg.set_main_option("script_location", str((ROOT_DIR / "db/alembic").absolute()))
