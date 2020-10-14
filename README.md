@@ -17,23 +17,6 @@
 
 ---
 
-## How to use
-
-### Set up
-
-1. Make sure git is initialized in this directory:
-```bash
-git init
-```
-2. If you don't have poetry, run:
-```bash
-make get-poetry
-```
-3. Install poetry, nox and pre-commit hooks with one command:
-```bash
-make install
-```
-
 ### Testing, formatting, linting, etc.
 All commands are set up in makefile for easy usage.
 
@@ -46,14 +29,6 @@ make safety
     ```bash
     make pytest
     ```
-* Docstring tests:
-    ```bash
-    make xdoctest
-    ```
-* Both:
-    ```bash
-    make tests
-    ```
 3. Run pre-commit hooks (include `black`, `isort`, `pyupgrade`, `flakehell` and `mypy`) on all files:
 ```bash
 make lint
@@ -61,10 +36,6 @@ make lint
 4. Create beautiful html documentation from your code:
 ```bash
 make docs
-```
-5. Build your package:
-```bash
-make build
 ```
 
 ---

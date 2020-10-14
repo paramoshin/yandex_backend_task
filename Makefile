@@ -29,7 +29,7 @@ lint:
 
 .PHONY: docs
 docs:
-	nox -rs docs-$(PYTHON_VERSION)
+	PYTHONPATH=ecommerce_analyzer/ nox -rs docs-$(PYTHON_VERSION)
 
 .PHONY: loadtest
 loadtest:
