@@ -22,6 +22,7 @@ aiomisc = "^11.0.0"
 asyncpg = "^0.21.0"
 psycopg2-binary = "^2.8.6"
 gunicorn = "^20.0.4"
+starlette-prometheus = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"

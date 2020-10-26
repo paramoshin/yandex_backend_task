@@ -4,25 +4,50 @@ services:
   db:
     restart: always
     image: postgres:12
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 5s
+      timeout: 3s
+    command: postgres -c 'max_connections=200'
     volumes:
       - ecommerce-analyzer-db:/var/lib/postgresql/data/pgdata
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
     env_file:
-      - ecommerce_analyzer/env/.env
+      - env/.env
     ports:
       - ${POSTGRES_PORT:-5432}:5432
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+          - node.labels.ecommerce-analyzer.db-data == true
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    networks:
+      - default
+    env_file:
+      - env/.env
+    ports:
+      - 5050:5050
 
   analyzer:
+    restart: always
+    image: ecommerce-analyzer
+    depends_on:
+      - db
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        DEV_MODE: "false"
-    depends_on:
-      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/healthcheck"]
+      interval: 10s
+      timeout: 3s
     env_file:
-      - ecommerce_analyzer/env/.env
+      - env/.env
     ports:
       - 8000:80
 

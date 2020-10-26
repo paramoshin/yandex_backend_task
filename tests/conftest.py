@@ -6,11 +6,13 @@ import docker
 import pytest
 from alembic.config import Config
 from config import ROOT_DIR
-from db.settings import ENV_DIR, DataBaseSettings
+from db.settings import DataBaseSettings
+from dotenv import load_dotenv
 from tzlocal import get_localzone
 from utils import wait_for_pg_container
 
 TIMEZONE = get_localzone().zone
+load_dotenv("env/dev.env", verbose=True)
 
 
 @pytest.fixture(scope="session")
@@ -24,7 +26,8 @@ def unused_port():
 @pytest.fixture(scope="session")
 def db_settings(unused_port):
     """Create dev database settings with unused port."""
-    return DataBaseSettings(host="localhost", port=unused_port, _env_file=(ENV_DIR / "dev.env"))
+    password = str(uuid.uuid4())
+    return DataBaseSettings(user="test_user", password=password, host="localhost", port=unused_port, db="test_db")
 
 
 @pytest.fixture(scope="session")

@@ -1,7 +1,8 @@
 """API service."""
 from __future__ import annotations
 
-from typing import Union
+import os
+from typing import Dict, Union
 
 import analyzer
 from databases import Database
@@ -10,11 +11,14 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
+from starlette_prometheus import PrometheusMiddleware, metrics
 
 from .dependencies import database
 from .scheme import Citizen, CitizenPatch, Import, Percentiles, Presents, SavedImport
 
 app = FastAPI(title="Ecommerce Analyzer", version="1.0", description="Provides analytical information about citizens")
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", metrics)
 
 
 def get_db() -> Database:
@@ -23,9 +27,10 @@ def get_db() -> Database:
 
 
 @app.on_event("startup")
-async def connect_to_database() -> None:
-    """Start connection pool on application startup."""
+async def startup_event() -> None:
+    """Start connection pool and clear environment variables on application startup."""
     print(f"Creating connection pool to {database.url}")
+    os.environ.clear()
     await database.connect()
 
 
@@ -41,6 +46,12 @@ def validation_exception_handler(request: Request, exc: RequestValidationError) 
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST, content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
     )
+
+
+@app.get("/healthcheck")
+def health_check() -> Dict[str, str]:
+    """Return 200 if ok."""
+    return {"message": "ok"}
 
 
 @app.post("/imports", response_model=SavedImport, status_code=status.HTTP_201_CREATED)

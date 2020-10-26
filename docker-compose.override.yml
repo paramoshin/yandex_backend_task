@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  db:
+    networks:
+      - analyzer-dev-network
+    volumes:
+      - ecommerce-analyzer-db-dev:/var/lib/postgresql/data/pgdata
+    env_file:
+      - env/dev.env
+
+  pgadmin:
+    networks:
+      - analyzer-dev-network
+    env_file:
+      - env/dev.env
+
+  analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - analyzer-dev-network
+    env_file:
+      - env/dev.env
+
+networks:
+  analyzer-dev-network:
+    external: false
+
+volumes:
+  ecommerce-analyzer-db-dev:

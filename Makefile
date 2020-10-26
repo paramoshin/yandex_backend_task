@@ -35,12 +35,16 @@ docs:
 loadtest:
 	PYTHONPATH=ecommerce_analyzer/ locust -f locustfile.py
 
-.PHONY: docker-dev
-docker-dev:
+.PHONY: up
+up:
 	docker network create analyzer-dev-network || true
-	docker-compose --env-file ecommerce_analyzer/env/dev.env -f docker-compose.dev.yml up -d db
-	docker-compose --env-file ecommerce_analyzer/env/dev.env -f docker-compose.dev.yml up -d analyzer
+	docker-compose up -d
+	docker-compose run analyzer alembic upgrade head
 
-.PHONY: docker
-docker:
-	docker-compose --env-file ecommerce_analyzer/env/.env -f docker-compose.yml up -d
+.PHONY: build
+build:
+	docker-compose -f docker-compose.yml build
+
+.PHONY: deploy
+deploy:
+	docker stack deploy -c docker-stack.yml ecommerce-analyzer
