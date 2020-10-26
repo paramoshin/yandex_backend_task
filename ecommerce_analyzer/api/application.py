@@ -29,7 +29,6 @@ def get_db() -> Database:
 @app.on_event("startup")
 async def startup_event() -> None:
     """Start connection pool and clear environment variables on application startup."""
-    print(f"Creating connection pool to {database.url}")
     os.environ.clear()
     await database.connect()
 

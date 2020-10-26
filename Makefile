@@ -51,4 +51,4 @@ push:
 
 .PHONY: deploy
 deploy:
-	docker stack deploy -c docker-stack.yml ecommerce-analyzer
+	docker stack deploy -c docker-compose.yml ecommerce-analyzer
