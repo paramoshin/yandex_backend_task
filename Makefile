@@ -45,6 +45,10 @@ up:
 build:
 	docker-compose -f docker-compose.yml build
 
+.PHONY: push
+push:
+	docker-compose -f docker-compose.yml push
+
 .PHONY: deploy
 deploy:
 	docker stack deploy -c docker-stack.yml ecommerce-analyzer
