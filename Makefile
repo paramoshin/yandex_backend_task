@@ -51,4 +51,5 @@ push:
 
 .PHONY: deploy
 deploy:
+	docker network create -d overlay ecommerce-analyzer-network || true
 	docker stack deploy -c docker-compose.yml ecommerce-analyzer
