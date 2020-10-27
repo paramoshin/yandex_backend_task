@@ -37,8 +37,7 @@ loadtest:
 
 .PHONY: up
 up:
-	docker network create analyzer-dev-network || true
-	docker-compose up -d
+	DOMAIN=localhost docker-compose up -d
 	docker-compose run analyzer alembic upgrade head
 
 .PHONY: build
@@ -51,5 +50,5 @@ push:
 
 .PHONY: deploy
 deploy:
-	docker network create -d overlay ecommerce-analyzer-network || true
+	docker network create --driver=overlay traefik-public || true
 	docker stack deploy -c docker-compose.yml --with-registry-auth ecommerce-analyzer

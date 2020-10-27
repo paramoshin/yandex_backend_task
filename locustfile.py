@@ -5,6 +5,10 @@ import logging
 from http import HTTPStatus
 from typing import *
 
+from dotenv import load_dotenv
+
+load_dotenv("env/.env")
+
 from ecommerce_analyzer.api.application import app
 from locust import HttpUser, TaskSet, constant, task
 from locust.exception import RescheduleTask
